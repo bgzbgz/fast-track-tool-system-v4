@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Opportunity Calculator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { font-family: Arial, Helvetica, sans-serif; background: #F5F5F5; color: #333; }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    header { background: #1A1A2E; color: white; padding: 24px; border-radius: 8px; text-align: center; margin-bottom: 24px; }
+    header h1 { font-size: 28px; margin-bottom: 8px; }
+    header .subtitle { font-size: 16px; opacity: 0.9; }
+    
+    .progress { display: flex; gap: 8px; margin: 16px 0; }
+    .progress-step { flex: 1; height: 4px; background: #F5F5F5; border-radius: 2px; transition: background 0.3s; }
+    .progress-step.complete { background: #FF5733; }
+    
+    .form-section { background: white; padding: 24px; border-radius: 8px; margin-bottom: 16px; }
+    
+    .form-group { margin-bottom: 24px; }
+    .form-group:last-child { margin-bottom: 0; }
+    
+    label { display: block; font-weight: bold; margin-bottom: 8px; color: #1A1A2E; font-size: 16px; }
+    
+    .help-text { font-size: 14px; color: #666; margin-top: 4px; line-height: 1.4; }
+    
+    input, textarea { width: 100%; padding: 12px; border: 2px solid #F5F5F5; border-radius: 4px; font-size: 16px; transition: border-color 0.3s; }
+    input:focus, textarea:focus { border-color: #FF5733; outline: none; }
+    input.valid { border-color: #28a745; }
+    input.invalid { border-color: #dc3545; }
+    
+    textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+    
+    .input-addon { position: relative; }
+    .input-addon input { padding-left: 24px; }
+    .input-addon::before { content: '$'; position: absolute; left: 12px; top: 14px; color: #666; font-weight: bold; }
+    
+    .percent-addon { position: relative; }
+    .percent-addon input { padding-right: 24px; }
+    .percent-addon::after { content: '%'; position: absolute; right: 12px; top: 14px; color: #666; font-weight: bold; }
+    
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      background: #FF5733;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 16px;
+    }
+    button[type="submit"]:hover { background: #e64a2e; }
+    button[type="submit"]:disabled { background: #ccc; cursor: not-allowed; }
+    
+    .results { display: none; margin-top: 24px; }
+    .results.show { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .result-card { background: white; padding: 24px; border-radius: 8px; margin-bottom: 16px; }
+    
+    .metric { text-align: center; padding: 16px; margin-bottom: 16px; }
+    .metric-label { font-size: 14px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .metric-value { font-size: 48px; font-weight: bold; color: #1A1A2E; }
+    .metric-subtext { font-size: 14px; color: #666; margin-top: 4px; }
+    
+    .verdict { text-align: center; padding: 24px; border-radius: 8px; margin: 16px 0; border: 3px solid; }
+    .verdict.go { background: #d4edda; border-color: #FF5733; }
+    .verdict.nogo { background: #f8d7da; border-color: #FF5733; }
+    .verdict h2 { font-size: 36px; margin-bottom: 8px; font-weight: bold; }
+    .verdict.go h2 { color: #1A1A2E; }
+    .verdict.nogo h2 { color: #1A1A2E; }
+    .verdict p { font-size: 16px; margin-bottom: 0; }
+    
+    .forces-analysis { background: #F5F5F5; padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .forces-analysis h3 { color: #1A1A2E; margin-bottom: 12px; }
+    .force-item { background: white; padding: 12px; margin-bottom: 8px; border-radius: 4px; border-left: 4px solid #FF5733; }
+    
+    .commitment { background: #F5F5F5; padding: 24px; border-radius: 8px; margin-top: 16px; }
+    .commitment h3 { color: #1A1A2E; margin-bottom: 16px; }
+    .commitment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 480px) { .commitment-grid { grid-template-columns: 1fr; } }
+    
+    .share-button { background: #1A1A2E; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .share-button:hover { background: #2a2a4e; }
+    
+    .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; display: none; }
+    .error-message.show { display: block; }
+    
+    .validation-icon { position: absolute; right: 12px; top: 12px; font-size: 18px; display: none; }
+    .validation-icon.valid { color: #28a745; display: block; }
+    .validation-icon.invalid { color: #dc3545; display: block; }
+    
+    .field-wrapper { position: relative; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Market Opportunity Calculator</h1>
+      <p class="subtitle">Get a clear GO/NO-GO decision on whether this market is worth pursuing</p>
+    </header>
+
+    <div class="progress">
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+      <div class="progress-step" data-step="3"></div>
+      <div class="progress-step" data-step="4"></div>
+      <div class="progress-step" data-step="5"></div>
+    </div>
+
+    <main>
+      <form id="marketForm">
+        <div class="form-section">
+          <div class="form-group">
+            <label for="totalCustomers">Step 1: Total Potential Customers</label>
+            <div class="field-wrapper">
+              <input type="number" id="totalCustomers" placeholder="250000" min="1" required>
+              <span class="validation-icon">✓</span>
+            </div>
+            <div class="help-text">Count ALL potential customers, not just your current ones. Include competitors' customers.</div>
+            <div class="error-message">Please enter the total number of potential customers</div>
+          </div>
+
+          <div class="form-group">
+            <label for="averageSpending">Step 2: Average Customer Spending Per Purchase</label>
+            <div class="field-wrapper input-addon">
+              <input type="number" id="averageSpending" placeholder="45.00" min="0.01" step="0.01" required>
+              <span class="validation-icon">✓</span>
+            </div>
+            <div class="help-text">Rough estimate is OK. What does a typical customer spend in one purchase?</div>
+            <div class="error-message">Please enter the average spending amount per purchase</div>
+          </div>
+
+          <div class="form-group">
+            <label for="purchaseFrequency">Step 3: Purchases Per Customer Per Year</label>
+            <div class="field-wrapper">
+              <input type="number" id="purchaseFrequency" placeholder="4" min="0.1" step="0.1" required>
+              <span class="validation-icon">✓</span>
+            </div>
+            <div class="help-text">How often does a customer buy? 0.5 = twice per year, 12 = monthly</div>
+            <div class="error-message">Please enter the purchase frequency per year</div>
+          </div>
+
+          <div class="form-group">
+            <label for="profitMargin">Step 4: Industry Gross Profit Margin</label>
+            <div class="field-wrapper percent-addon">
+              <input type="number" id="profitMargin" placeholder="25" min="1" max="95" required>
+              <span class="validation-icon">✓</span>
+            </div>
+            <div class="help-text">Industry average is fine. Most service businesses: 60-80%, retail: 20-50%</div>
+            <div class="error-message">Please enter a profit margin between 1% and 95%</div>
+          </div>
+
+          <div class="form-group">
+            <label for="drivingForces">Step 5: Forces That Will Change This Market</label>
+            <div class="field-wrapper">
+              <textarea id="drivingForces" placeholder="AI automation reducing costs&#10;New regulations requiring compliance&#10;Remote work increasing demand&#10;Economic recession changing behavior&#10;New technology disrupting industry" required></textarea>
+              <span class="validation-icon">✓</span>
+            </div>
+            <div class="help-text">List 5-8 specific forces (technology, regulations, trends, economics). One per line.</div>
+            <div class="error-message">Please list the forces that could change this market</div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>Calculate Market Opportunity</button>
+      </form>
+
+      <div id="results" class="results">
+        <div class="result-card">
+          <div class="metric">
+            <div class="metric-label">Total Market Size</div>
+            <div class="metric-value" id="marketSize">$0</div>
+            <div class="metric-subtext">Annual market opportunity</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Profit Pool</div>
+            <div class="metric-value" id="profitPool">$0</div>
+            <div class="metric-subtext">Total profit available in market</div>
+          </div>
+
+          <div class="forces-analysis">
+            <h3>Key Market Forces Identified</h3>
+            <div id="forcesDisplay"></div>
+          </div>
+
+          <div id="verdict" class="verdict">
+            <h2>GO</h2>
+            <p>This market is worth pursuing. Focus on the top driving forces and develop your strategy within 30 days.</p>
+          </div>
+        </div>
+
+        <div class="commitment">
+          <h3>My Commitment</h3>
+          <p>Based on this analysis, I commit to taking action:</p>
+          
+          <div class="commitment-grid">
+            <div class="form-group">
+              <label>Who will own this?</label>
+              <div class="field-wrapper">
+                <input type="text" id="commitWho" placeholder="Sarah Johnson (not 'The Team')">
+              </div>
+              <div class="error-message">Please enter a specific person's name, not 'team', 'group', or 'department'</div>
+            </div>
+            <div class="form-group">
+              <label>By when?</label>
+              <input type="date" id="commitWhen">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>What specific action?</label>
+            <input type="text" id="commitWhat" placeholder="Research top 3 competitors in high-growth segments">
+          </div>
+          
+          <button type="button" class="share-button" onclick="shareResults()">Share My Market Decision</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('marketForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('commitWhen').min = today;
+
+    // Add validation for commitWho field
+    document.getElementById('commitWho').addEventListener('input', function() {
+      validateCommitWho(this);
+    });
+
+    document.getElementById('commitWho').addEventListener('blur', function() {
+      validateCommitWho(this);
+    });
+
+    function validateCommitWho(input) {
+      const value = input.value.toLowerCase().trim();
+      const genericTerms = ['team', 'the team', 'group', 'the group', 'department', 'the department', 'staff', 'everyone', 'we', 'us'];
+      const errorMsg = input.parentElement.parentElement.querySelector('.error-message');
+      
+      const isGeneric = genericTerms.some(term => value === term || value.includes(term));
+      
+      if (value && isGeneric) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        if (errorMsg) errorMsg.classList.add('show');
+      } else if (value && value.length > 2) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        if (errorMsg) errorMsg.classList.remove('show');
+      } else {
+        input.classList.remove('valid', 'invalid');
+        if (errorMsg) errorMsg.classList.remove('show');
+      }
+    }
+
+    // Real-time validation
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', function() {
+        validateInput(this);
+        updateProgress();
+        checkFormValidity();
+      });
+
+      input.addEventListener('blur', function() {
+        validateInput(this);
+      });
+    });
+
+    function validateInput(input) {
+      const wrapper = input.closest('.field-wrapper');
+      const icon = wrapper ? wrapper.querySelector('.validation-icon') : null;
+      const errorMsg = input.parentElement.querySelector('.error-message') || 
+                      input.parentElement.parentElement.querySelector('.error-message');
+
+      let isValid = false;
+
+      if (input.id === 'totalCustomers') {
+        isValid = input.value && parseInt(input.value) >= 1;
+      } else if (input.id === 'averageSpending') {
+        isValid = input.value && parseFloat(input.value) >= 0.01;
+      } else if (input.id === 'purchaseFrequency') {
+        isValid = input.value && parseFloat(input.value) >= 0.1;
+      } else if (input.id === 'profitMargin') {
+        const val = parseFloat(input.value);
+        isValid = input.value && val >= 1 && val <= 95;
+      } else if (input.id === 'drivingForces') {
+        const lines = input.value.trim().split('\n').filter(line => line.trim());
+        isValid = lines.length >= 3;
+      }
+
+      if (isValid) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        if (icon) {
+          icon.classList.add('valid');
+          icon.classList.remove('invalid');
+        }
+        if (errorMsg) errorMsg.classList.remove('show');
+      } else if (input.value) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        if (icon) {
+          icon.classList.add('invalid');
+          icon.classList.remove('valid');
+        }
+        if (errorMsg) errorMsg.classList.add('show');
+      } else {
+        input.classList.remove('valid', 'invalid');
+        if (icon) {
+          icon.classList.remove('valid', 'invalid');
+        }
+        if (errorMsg) errorMsg.classList.remove('show');
+      }
+    }
+
+    function updateProgress() {
+      const steps = document.querySelectorAll('.progress-step');
+      const validInputs = form.querySelectorAll('input.valid, textarea.valid').length;
+      
+      steps.forEach((step, i) => {
+        step.classList.toggle('complete', i < validInputs);
+      });
+    }
+
+    function checkFormValidity() {
+      const validInputs = form.querySelectorAll('input.valid, textarea.valid').length;
+      const requiredInputs = form.querySelectorAll('input[required], textarea[required]').length;
+      
+      submitBtn.disabled = validInputs < requiredInputs;
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const totalCustomers = parseInt(document.getElementById('totalCustomers').value);
+      const averageSpending = parseFloat(document.getElementById('averageSpending').value);
+      const purchaseFrequency = parseFloat(document.getElementById('purchaseFrequency').value);
+      const profitMargin = parseFloat(document.getElementById('profitMargin').value);
+      const drivingForces = document.getElementById('drivingForces').value;
+
+      // Calculate market size and profit pool
+      const marketSize = totalCustomers * averageSpending * purchaseFrequency;
+      const profitPool = marketSize * (profitMargin / 100);
+
+      // Display results
+      document.getElementById('marketSize').textContent = '$' + marketSize.toLocaleString();
+      document.getElementById('profitPool').textContent = '$' + profitPool.toLocaleString();
+
+      // Process driving forces
+      const forces = drivingForces.trim().split('\n').filter(line => line.trim());
+      const forcesDisplay = document.getElementById('forcesDisplay');
+      forcesDisplay.innerHTML = '';
+      forces.slice(0, 8).forEach(force => {
+        const div = document.createElement('div');
+        div.className = 'force-item';
+        div.textContent = force.trim();
+        forcesDisplay.appendChild(div);
+      });
+
+      // Determine verdict
+      const verdict = document.getElementById('verdict');
+      const hasSignificantForces = forces.length >= 3;
+      
+      if (marketSize >= 1000000 && profitPool >= 100000 && hasSignificantForces) {
+        verdict.className = 'verdict go';
+        verdict.innerHTML = `
+          <h2>GO</h2>
+          <p>This market is worth pursuing. Focus on the top driving forces and develop your strategy within 30 days.</p>
+        `;
+      } else if (marketSize < 500000 || profitPool < 50000 || !hasSignificantForces) {
+        verdict.className = 'verdict nogo';
+        const reasons = [];
+        if (marketSize < 500000) reasons.push('market too small');
+        if (profitPool < 50000) reasons.push('profit pool insufficient');
+        if (!hasSignificantForces) reasons.push('no significant driving forces');
+        
+        verdict.innerHTML = `
+          <h2>NO-GO</h2>
+          <p>This market needs work before pursuit. Issues: ${reasons.join(', ')}. Redefine your customer base or find a different market within 2 weeks.</p>
+        `;
+      } else {
+        verdict.className = 'verdict go';
+        verdict.innerHTML = `
+          <h2>CAUTION</h2>
+          <p>This market shows potential but requires careful strategy. Focus on high-margin segments and monitor driving forces closely.</p>
+        `;
+      }
+
+      // Show results with animation
+      document.getElementById('results').classList.add('show');
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function shareResults() {
+      const marketSize = document.getElementById('marketSize').textContent;
+      const profitPool = document.getElementById('profitPool').textContent;
+      const verdict = document.querySelector('.verdict h2').textContent;
+      const who = document.getElementById('commitWho').value || 'Not specified';
+      const what = document.getElementById('commitWhat').value || 'Not specified';
+      const when = document.getElementById('commitWhen').value || 'Not specified';
+
+      const summary = `Market Opportunity Analysis Results:
+
+Market Size: ${marketSize}
+Profit Pool: ${profitPool}
+Decision: ${verdict}
+
+My Commitment:
+Who: ${who}
+What: ${what}
+When: ${when}
+
+Generated by Fast Track Market Calculator`;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(summary).then(() => {
+          alert('Results copied to clipboard!');
+        });
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = summary;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Results copied to clipboard!');
+      }
+    }
+  </script>
+</body>
+</html>
