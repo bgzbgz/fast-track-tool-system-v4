@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Value Proposition Verdict - Fast Track</title>
+  <style>
+    :root {
+      --black: #000000;
+      --white: #FFFFFF;
+      --primary: #FF5733;
+      --secondary: #1A1A2E;
+      --accent: #F5F5F5;
+      --grey: #B2B2B2;
+      --font-headline: Arial, Helvetica, sans-serif;
+      --font-body: Arial, Helvetica, sans-serif;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--black);
+      background: var(--white);
+      min-height: 100vh;
+    }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+    header {
+      background: var(--secondary);
+      color: var(--white);
+      padding: 32px 24px;
+      text-align: center;
+      border: 2px solid var(--black);
+    }
+    header h1 {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 1.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+    }
+    header .subtitle {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--grey);
+      letter-spacing: 0.05em;
+    }
+
+    .step-counter {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin: 24px 0 16px 0;
+    }
+
+    .progress { display: flex; gap: 4px; margin-bottom: 24px; }
+    .progress-step { flex: 1; height: 4px; background: var(--grey); }
+    .progress-step.complete { background: var(--primary); }
+
+    .form-group { margin-bottom: 24px; }
+    label {
+      display: block;
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+      color: var(--black);
+    }
+    .help-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--black);
+      background: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+      resize: vertical;
+    }
+    textarea { min-height: 80px; }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #FFFEF0;
+    }
+    input.valid, textarea.valid { border-color: var(--black); background: #F8FFF8; }
+    input.invalid, textarea.invalid { border-color: var(--black); background: #FFF8F8; }
+
+    button[type="submit"], .btn-primary {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--primary);
+      color: var(--black);
+      border: 2px solid var(--black);
+      font-family: var(--font-headline);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      min-height: 44px;
+      transition: background 0.15s ease;
+    }
+    button[type="submit"]:hover, .btn-primary:hover { background: var(--white); }
+    button[type="submit"]:disabled {
+      background: var(--grey);
+      color: var(--white);
+      cursor: not-allowed;
+    }
+
+    .results {
+      display: none;
+      margin-top: 32px;
+    }
+    .results.show { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .verdict {
+      text-align: center;
+      padding: 32px;
+      margin: 24px 0;
+      border: 2px solid var(--black);
+      background: var(--white);
+      color: var(--black);
+    }
+    .verdict.go {
+      background: #90EE90;
+    }
+    .verdict.refine {
+      background: #FFD700;
+    }
+    .verdict.rework {
+      background: #FFB6C1;
+    }
+    .verdict h2 {
+      font-family: var(--font-headline);
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .verdict p {
+      font-family: var(--font-body);
+      font-size: 16px;
+    }
+
+    .result-value {
+      text-align: center;
+      padding: 24px;
+      margin: 16px 0;
+      border: 2px solid var(--black);
+    }
+    .result-value h3 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 8px;
+    }
+    .result-value .big-number {
+      font-family: var(--font-headline);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    .clarity-breakdown {
+      background: var(--white);
+      padding: 24px;
+      margin: 16px 0;
+      border: 2px solid var(--black);
+    }
+    .clarity-breakdown h3 {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .criteria-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--grey);
+    }
+    .criteria-item:last-child { border-bottom: none; }
+    .criteria-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--black);
+    }
+    .criteria-score {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .score-pass { color: var(--black); }
+    .score-fail { color: var(--grey); }
+
+    .commitment {
+      background: var(--white);
+      padding: 24px;
+      margin-top: 24px;
+      border: 2px solid var(--black);
+    }
+    .commitment h3 {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+
+    .error-message {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--primary);
+      padding: 4px 8px;
+      margin-top: 4px;
+      display: none;
+    }
+    .error-message.show { display: inline-block; }
+
+    .rewritten-formula {
+      background: #F8FFF8;
+      padding: 16px;
+      margin: 16px 0;
+      border: 2px solid var(--black);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>VALUE PROPOSITION VERDICT</h1>
+      <p class="subtitle">BRUTAL CLARITY ON CONVERT VS CONFUSE</p>
+    </header>
+
+    <div class="step-counter">STEP <span id="currentStep">1</span> OF 4</div>
+
+    <div class="progress">
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+      <div class="progress-step" data-step="3"></div>
+      <div class="progress-step" data-step="4"></div>
+    </div>
+
+    <main>
+      <form id="toolForm">
+        <div class="form-group">
+          <label for="currentValueProp">YOUR CURRENT VALUE PROPOSITION</label>
+          <div class="help-text">PASTE YOUR EXACT MESSAGING - NO EDITING</div>
+          <textarea id="currentValueProp" placeholder="We help small businesses streamline operations through innovative software solutions" required></textarea>
+          <div class="error-message">REQUIRED - PASTE YOUR ACTUAL MESSAGE</div>
+        </div>
+
+        <div class="form-group">
+          <label for="targetSegment">SPECIFIC TARGET CUSTOMER</label>
+          <div class="help-text">NOT "SMALL BUSINESSES" - BE SPECIFIC</div>
+          <input type="text" id="targetSegment" placeholder="Construction company owners with 10-50 employees" required>
+          <div class="error-message">REQUIRED - WHO EXACTLY?</div>
+        </div>
+
+        <div class="form-group">
+          <label for="painPoint">THEIR URGENT PAIN POINT</label>
+          <div class="help-text">WHAT KEEPS THEM UP AT NIGHT?</div>
+          <textarea id="painPoint" placeholder="Losing money daily due to equipment downtime and can't track which machines need maintenance" required></textarea>
+          <div class="error-message">REQUIRED - WHAT URGENT PROBLEM?</div>
+        </div>
+
+        <div class="form-group">
+          <label for="keyDifferentiator">WHY YOU BEAT COMPETITORS</label>
+          <div class="help-text">WHAT DO OTHERS FAIL TO DELIVER?</div>
+          <input type="text" id="keyDifferentiator" placeholder="Unlike generic software, we give real-time mobile alerts before breakdowns happen" required>
+          <div class="error-message">REQUIRED - WHAT MAKES YOU DIFFERENT?</div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>GET MY VERDICT</button>
+      </form>
+
+      <div id="results" class="results">
+        <div class="result-value">
+          <h3>CLARITY SCORE</h3>
+          <div class="big-number"><span id="clarityScore">0</span>/7</div>
+        </div>
+
+        <div class="clarity-breakdown">
+          <h3>CLARITY BREAKDOWN</h3>
+          <div class="criteria-item">
+            <span class="criteria-label">SPECIFIC TARGET</span>
+            <span class="criteria-score" id="specificTarget">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">URGENT PAIN</span>
+            <span class="criteria-score" id="urgentPain">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">CLEAR BENEFIT</span>
+            <span class="criteria-score" id="clearBenefit">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">DIFFERENTIATION</span>
+            <span class="criteria-score" id="differentiation">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">JARGON FREE</span>
+            <span class="criteria-score" id="jargonFree">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">FORMULA STRUCTURE</span>
+            <span class="criteria-score" id="formulaStructure">FAIL</span>
+          </div>
+          <div class="criteria-item">
+            <span class="criteria-label">COMPLETENESS</span>
+            <span class="criteria-score" id="completeness">FAIL</span>
+          </div>
+        </div>
+
+        <div id="rewrittenFormula" class="rewritten-formula" style="display:none;">
+          <h4>REWRITTEN USING FAST TRACK FORMULA:</h4>
+          <p id="formulaText"></p>
+        </div>
+
+        <div id="verdict" class="verdict">
+          <h2 id="verdictText">NO-GO</h2>
+          <p id="verdictMessage">Your messaging will confuse customers. Fix before launch.</p>
+        </div>
+
+        <div class="commitment">
+          <h3>MY COMMITMENT</h3>
+          <p>Based on this verdict, I commit to:</p>
+          <div class="form-group">
+            <label for="commitWho">WHO WILL OWN THIS?</label>
+            <input type="text" id="commitWho" placeholder="Sarah Johnson (not 'marketing team')">
+            <div class="error-message">NAME A SPECIFIC PERSON - NOT A TEAM</div>
+          </div>
+          <div class="form-group">
+            <label for="commitWhat">WHAT SPECIFIC ACTION?</label>
+            <input type="text" id="commitWhat" placeholder="Rewrite value prop using Fast Track formula">
+          </div>
+          <div class="form-group">
+            <label for="commitWhen">BY WHEN?</label>
+            <input type="date" id="commitWhen">
+          </div>
+          <button type="button" class="btn-primary" onclick="shareResults()">SHARE MY VERDICT</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('toolForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Jargon words to detect
+    const jargonWords = [
+      'innovative', 'streamline', 'optimize', 'leverage', 'synergy', 'solution', 'cutting-edge',
+      'revolutionary', 'disruptive', 'scalable', 'robust', 'comprehensive', 'strategic',
+      'advanced', 'sophisticated', 'state-of-the-art', 'world-class', 'best-in-class',
+      'seamless', 'turnkey', 'enterprise-grade', 'next-generation', 'paradigm'
+    ];
+
+    // Real-time validation
+    inputs.forEach(input => {
+      input.addEventListener('input', function() {
+        validateInput(this);
+        updateProgress();
+        checkFormValid();
+        updateStepCounter();
+      });
+    });
+
+    function validateInput(input) {
+      const value = input.value.trim();
+      const errorMsg = input.parentNode.querySelector('.error-message');
+      
+      if (input.id === 'commitWho') {
+        const teamWords = ['team', 'department', 'group'];
+        const hasTeamWord = teamWords.some(word => value.toLowerCase().includes(word));
+        
+        if (value.length > 0 && !hasTeamWord) {
+          input.classList.add('valid');
+          input.classList.remove('invalid');
+          errorMsg.classList.remove('show');
+        } else if (value.length > 0 && hasTeamWord) {
+          input.classList.remove('valid');
+          input.classList.add('invalid');
+          errorMsg.classList.add('show');
+        } else {
+          input.classList.remove('valid', 'invalid');
+          errorMsg.classList.remove('show');
+        }
+      } else {
+        if (value.length > 0) {
+          input.classList.add('valid');
+          input.classList.remove('invalid');
+          errorMsg.classList.remove('show');
+        } else {
+          input.classList.remove('valid');
+          if (input.hasAttribute('required')) {
+            input.classList.add('invalid');
+            errorMsg.classList.add('show');
+          }
+        }
+      }
+    }
+
+    function updateProgress() {
+      const steps = document.querySelectorAll('.progress-step');
+      const validInputs = form.querySelectorAll('input.valid, textarea.valid').length;
+      steps.forEach((step, i) => {
+        step.classList.toggle('complete', i < validInputs);
+      });
+    }
+
+    function updateStepCounter() {
+      const validInputs = form.querySelectorAll('input.valid, textarea.valid').length;
+      document.getElementById('currentStep').textContent = Math.min(validInputs + 1, 4);
+    }
+
+    function checkFormValid() {
+      const allValid = [...inputs].every(input => input.classList.contains('valid'));
+      submitBtn.disabled = !allValid;
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const currentValueProp = document.getElementById('currentValueProp').value.trim();
+      const targetSegment = document.getElementById('targetSegment').value.trim();
+      const painPoint = document.getElementById('painPoint').value.trim();
+      const keyDifferentiator = document.getElementById('keyDifferentiator').value.trim();
+
+      // Calculate clarity score
+      const score = calculateClarityScore(currentValueProp, targetSegment, painPoint, keyDifferentiator);
+      
+      // Show results
+      showResults(score, currentValueProp, targetSegment, painPoint, keyDifferentiator);
+    });
+
+    function calculateClarityScore(valueProp, target, pain, differentiator) {
+      const scores = {
+        specificTarget: 0,
+        urgentPain: 0,
+        clearBenefit: 0,
+        differentiation: 0,
+        jargonFree: 0,
+        formulaStructure: 0,
+        completeness: 0
+      };
+
+      // Check specific target (not generic terms)
+      const genericTerms = ['small business', 'companies', 'organizations', 'clients', 'customers', 'people'];
+      const hasGeneric = genericTerms.some(term => target.toLowerCase().includes(term));
+      scores.specificTarget = hasGeneric ? 0 : 1;
+
+      // Check urgent pain (action words, money loss, time loss)
+      const urgencyWords = ['losing', 'wasting', 'bleeding', 'costing', 'daily', 'urgent', 'critical', 'emergency'];
+      const hasUrgency = urgencyWords.some(word => pain.toLowerCase().includes(word));
+      scores.urgentPain = hasUrgency ? 1 : 0;
+
+      // Check clear benefit (specific outcome)
+      const vagueWords = ['better', 'improved', 'enhanced', 'optimized'];
+      const hasVague = vagueWords.some(word => valueProp.toLowerCase().includes(word));
+      scores.clearBenefit = hasVague ? 0 : 1;
+
+      // Check differentiation (mentions competitors or alternatives)
+      const diffWords = ['unlike', 'different', 'only', 'first', 'exclusive', 'proprietary'];
+      const hasDiff = diffWords.some(word => differentiator.toLowerCase().includes(word));
+      scores.differentiation = hasDiff ? 1 : 0;
+
+      // Check jargon-free
+      const hasJargon = jargonWords.some(word => valueProp.toLowerCase().includes(word));
+      scores.jargonFree = hasJargon ? 0 : 1;
+
+      // Check formula structure (mentions target and pain)
+      const mentionsTarget = valueProp.toLowerCase().includes(target.split(' ')[0].toLowerCase());
+      const mentionsPain = valueProp.toLowerCase().includes(pain.split(' ')[0].toLowerCase());
+      scores.formulaStructure = (mentionsTarget && mentionsPain) ? 1 : 0;
+
+      // Check completeness (all fields substantive)
+      const minLengths = [valueProp.length > 30, target.length > 10, pain.length > 20, differentiator.length > 15];
+      scores.completeness = minLengths.every(x => x) ? 1 : 0;
+
+      return scores;
+    }
+
+    function showResults(scores, valueProp, target, pain, differentiator) {
+      // Calculate total score
+      const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+      
+      // Update score display
+      document.getElementById('clarityScore').textContent = totalScore;
+      
+      // Update individual criteria
+      Object.keys(scores).forEach(key => {
+        const element = document.getElementById(key);
+        const passed = scores[key] === 1;
+        element.textContent = passed ? 'PASS' : 'FAIL';
+        element.className = passed ? 'criteria-score score-pass' : 'criteria-score score-fail';
+      });
+
+      // Generate rewritten formula
+      const formulaText = `For ${target} who struggle with ${pain}, we provide ${extractSolution(valueProp)} that ${extractBenefit(pain)}, unlike ${differentiator}`;
+      document.getElementById('formulaText').textContent = formulaText;
+      document.getElementById('rewrittenFormula').style.display = 'block';
+
+      // Determine verdict
+      let verdictText, verdictMessage, verdictClass;
+      if (totalScore >= 6) {
+        verdictText = 'GO';
+        verdictMessage = 'Your value proposition will convert. TEST with 5 customers within 7 days.';
+        verdictClass = 'go';
+      } else if (totalScore >= 4) {
+        verdictText = 'REFINE';
+        verdictMessage = 'FIX failing criteria and retest before launch.';
+        verdictClass = 'refine';
+      } else {
+        verdictText = 'REWORK';
+        verdictMessage = 'Your messaging will confuse customers. REWRITE using Fast Track formula within 2 days.';
+        verdictClass = 'rework';
+      }
+
+      document.getElementById('verdictText').textContent = verdictText;
+      document.getElementById('verdictMessage').textContent = verdictMessage;
+      document.getElementById('verdict').className = `verdict ${verdictClass}`;
+
+      // Show results with animation
+      document.getElementById('results').classList.add('show');
+    }
+
+    function extractSolution(valueProp) {
+      // Simple extraction - look for service/product words
+      const words = valueProp.split(' ');
+      const serviceWords = ['software', 'platform', 'service', 'system', 'tool', 'app'];
+      const found = words.find(word => serviceWords.some(s => word.toLowerCase().includes(s)));
+      return found || 'our solution';
+    }
+
+    function extractBenefit(pain) {
+      // Convert pain to benefit
+      if (pain.toLowerCase().includes('losing money')) return 'saves money daily';
+      if (pain.toLowerCase().includes('wasting time')) return 'saves time instantly';
+      if (pain.toLowerCase().includes('downtime')) return 'prevents downtime';
+      return 'solves this problem';
+    }
+
+    function shareResults() {
+      const score = document.getElementById('clarityScore').textContent;
+      const verdict = document.getElementById('verdictText').textContent;
+      const summary = `VALUE PROPOSITION VERDICT: ${verdict} (${score}/7 clarity score)`;
+      
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(summary);
+        alert('Results copied to clipboard!');
+      } else {
+        alert(summary);
+      }
+    }
+  </script>
+</body>
+</html>
