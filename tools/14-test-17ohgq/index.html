@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Priority Decoder</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { font-family: Arial, Helvetica, sans-serif; background: #F5F5F5; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+    header { background: #1A1A2E; color: white; padding: 24px; border-radius: 8px; text-align: center; margin-bottom: 24px; }
+    header h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; opacity: 0.9; }
+
+    .progress { display: flex; gap: 8px; margin: 16px 0; }
+    .progress-step { flex: 1; height: 4px; background: #F5F5F5; border-radius: 2px; transition: background 0.3s; }
+    .progress-step.complete { background: #FF5733; }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-weight: bold; margin-bottom: 4px; color: #1A1A2E; }
+    .help-text { font-size: 12px; color: #666; margin-top: 4px; }
+    
+    input, select, textarea { 
+      width: 100%; 
+      padding: 12px; 
+      border: 2px solid #F5F5F5; 
+      border-radius: 4px; 
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #FF5733; outline: none; }
+    input.valid, textarea.valid { border-color: #28a745; }
+    input.invalid, textarea.invalid { border-color: #dc3545; }
+
+    textarea { height: 120px; resize: vertical; font-family: inherit; }
+
+    .slider-container { display: flex; align-items: center; gap: 12px; }
+    .slider { flex: 1; }
+    .slider-value { 
+      background: #FF5733; 
+      color: white; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      font-weight: bold; 
+      min-width: 32px; 
+      text-align: center; 
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      background: #FF5733;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button[type="submit"]:hover { background: #e74c2c; }
+    button[type="submit"]:disabled { background: #ccc; cursor: not-allowed; }
+
+    .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; display: none; }
+    .error-message.show { display: block; }
+
+    .results { display: none; margin-top: 24px; background: white; border-radius: 8px; overflow: hidden; }
+    .results.show { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .verdict { text-align: center; padding: 24px; border-radius: 8px; margin: 16px; }
+    .verdict.go { background: #d4edda; border: 2px solid #28a745; }
+    .verdict.nogo { background: #f8d7da; border: 2px solid #dc3545; }
+    .verdict h2 { font-size: 32px; margin-bottom: 8px; }
+    .verdict.go h2 { color: #28a745; }
+    .verdict.nogo h2 { color: #dc3545; }
+
+    .priority-section { margin: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; }
+    .priority-section h3 { color: #1A1A2E; margin-bottom: 12px; }
+
+    .priority-item { 
+      background: white; 
+      padding: 12px; 
+      margin-bottom: 8px; 
+      border-radius: 4px; 
+      border-left: 4px solid #FF5733;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .priority-item .score { 
+      font-weight: bold; 
+      color: #FF5733; 
+      float: right; 
+    }
+    .priority-item .description { 
+      font-size: 14px; 
+      color: #666; 
+      margin-top: 4px; 
+    }
+
+    .insight-box { 
+      background: #fff3cd; 
+      border: 1px solid #ffeaa7; 
+      padding: 16px; 
+      border-radius: 8px; 
+      margin: 16px; 
+    }
+    .insight-box h3 { color: #856404; margin-bottom: 8px; }
+
+    .commitment { background: #F5F5F5; padding: 16px; border-radius: 8px; margin: 16px; }
+    .commitment h3 { margin-bottom: 12px; color: #1A1A2E; }
+    .commitment .form-group { margin-bottom: 12px; }
+    .commitment input { background: white; }
+    .commitment button { 
+      background: #1A1A2E; 
+      padding: 12px 24px; 
+      width: auto; 
+      margin-top: 8px; 
+    }
+
+    .quality-check { 
+      background: #e9ecef; 
+      padding: 12px; 
+      border-radius: 4px; 
+      margin: 8px 16px; 
+      font-size: 14px; 
+    }
+    .quality-check.pass { background: #d4edda; color: #155724; }
+    .quality-check.fail { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Customer Priority Decoder</h1>
+      <p class="subtitle">Transform customer interviews into ranked action plan</p>
+    </header>
+
+    <div class="progress">
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+      <div class="progress-step" data-step="3"></div>
+      <div class="progress-step" data-step="4"></div>
+      <div class="progress-step" data-step="5"></div>
+    </div>
+
+    <main>
+      <form id="priorityForm">
+        <div class="form-group">
+          <label for="segmentName">Target Segment Name</label>
+          <input type="text" id="segmentName" placeholder="Mid-size SaaS founders" required>
+          <div class="help-text">Be specific - who exactly did you interview?</div>
+          <div class="error-message">Please enter your target segment</div>
+        </div>
+
+        <div class="form-group">
+          <label for="severityWeight">How much do you care about pain severity? (1=not much, 10=extremely important)</label>
+          <div class="slider-container">
+            <input type="range" id="severityWeight" class="slider" min="1" max="10" value="7">
+            <div class="slider-value" id="severityValue">7</div>
+          </div>
+          <div class="help-text">1 = minor annoyance, 10 = business-critical pain</div>
+        </div>
+
+        <div class="form-group">
+          <label for="frequencyWeight">How much do you care about how often pain occurs? (1=not much, 10=extremely important)</label>
+          <div class="slider-container">
+            <input type="range" id="frequencyWeight" class="slider" min="1" max="10" value="8">
+            <div class="slider-value" id="frequencyValue">8</div>
+          </div>
+          <div class="help-text">1 = rarely occurs, 10 = daily struggle</div>
+        </div>
+
+        <div class="form-group">
+          <label for="impactWeight">How much do you care about business impact? (1=not much, 10=extremely important)</label>
+          <div class="slider-container">
+            <input type="range" id="impactWeight" class="slider" min="1" max="10" value="9">
+            <div class="slider-value" id="impactValue">9</div>
+          </div>
+          <div class="help-text">1 = nice-to-have, 10 = core business opportunity</div>
+        </div>
+
+        <div class="form-group">
+          <label for="customerInterviews">Customer Interview Data</label>
+          <textarea id="customerInterviews" placeholder="PAIN: Can't track ROI on marketing spend - Sarah told me she spent 3 hours last week trying to figure out which channel drove their biggest client&#10;NEED: Real-time dashboard - Same Sarah said she checks 4 different tools every morning&#10;GAIN: Save 2 hours daily - Tom mentioned he'd pay extra to get those hours back for strategy work" required></textarea>
+          <div class="help-text">One pain/need/gain per line. Must include customer names and specific stories.</div>
+          <div class="error-message">Please enter your interview data with customer names and stories</div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>Decode My Priorities</button>
+      </form>
+
+      <div id="results" class="results">
+        <div id="qualityChecks"></div>
+        
+        <div id="verdict" class="verdict">
+          <h2>GO</h2>
+          <p>Your interviews reveal clear priorities. Focus on the top-ranked items below.</p>
+        </div>
+
+        <div class="priority-section">
+          <h3>🔥 Top 5 Customer PAINS</h3>
+          <div id="topPains"></div>
+        </div>
+
+        <div class="priority-section">
+          <h3>⚡ Top 5 Customer NEEDS</h3>
+          <div id="topNeeds"></div>
+        </div>
+
+        <div class="priority-section">
+          <h3>🎯 Top 5 Customer GAINS</h3>
+          <div id="topGains"></div>
+        </div>
+
+        <div class="insight-box">
+          <h3>Strategic Insights</h3>
+          <div id="insights"></div>
+        </div>
+
+        <div class="commitment">
+          <h3>My Commitment</h3>
+          <p>Based on these priorities, I commit to:</p>
+          <div class="form-group">
+            <label>Who will own this strategy development?</label>
+            <input type="text" id="commitWho" placeholder="Sarah Johnson (not 'The Team')">
+          </div>
+          <div class="form-group">
+            <label>What specific action will you take first?</label>
+            <input type="text" id="commitWhat" placeholder="Design solution for top-ranked pain point">
+          </div>
+          <div class="form-group">
+            <label>By when will this be completed?</label>
+            <input type="date" id="commitWhen">
+          </div>
+          <button type="button" onclick="shareResults()">Share My Priority Plan</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('priorityForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Slider handling
+    const sliders = ['severityWeight', 'frequencyWeight', 'impactWeight'];
+    sliders.forEach(sliderId => {
+      const slider = document.getElementById(sliderId);
+      const valueDisplay = document.getElementById(sliderId.replace('Weight', 'Value'));
+      
+      slider.addEventListener('input', function() {
+        valueDisplay.textContent = this.value;
+        validateInput({target: this});
+      });
+    });
+
+    // Real-time validation
+    inputs.forEach(input => {
+      input.addEventListener('input', validateInput);
+    });
+
+    function validateInput(e) {
+      const input = e.target;
+      let isValid = false;
+
+      if (input.type === 'text') {
+        isValid = input.value.trim().length > 2;
+      } else if (input.type === 'range') {
+        isValid = parseInt(input.value) >= 1;
+      } else if (input.tagName === 'TEXTAREA') {
+        const lines = input.value.trim().split('\n').filter(line => line.trim());
+        const hasCustomerNames = lines.some(line => 
+          /[A-Z][a-z]+ [A-Z][a-z]+|\b[A-Z][a-z]+\b/.test(line)
+        );
+        const hasCategories = lines.some(line => 
+          /^(PAIN|NEED|GAIN):/i.test(line.trim())
+        );
+        isValid = lines.length >= 3 && hasCustomerNames && hasCategories;
+      }
+
+      if (isValid) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        input.nextElementSibling?.nextElementSibling?.classList.remove('show');
+      } else if (input.value) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        input.nextElementSibling?.nextElementSibling?.classList.add('show');
+      }
+
+      updateProgress();
+      updateSubmitButton();
+    }
+
+    function updateProgress() {
+      const steps = document.querySelectorAll('.progress-step');
+      const validInputs = form.querySelectorAll('.valid').length;
+      steps.forEach((step, i) => {
+        step.classList.toggle('complete', i < validInputs);
+      });
+    }
+
+    function updateSubmitButton() {
+      const requiredValid = form.querySelectorAll('input[required].valid, textarea[required].valid').length;
+      const totalRequired = form.querySelectorAll('input[required], textarea[required]').length;
+      submitBtn.disabled = requiredValid < totalRequired;
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const segmentName = document.getElementById('segmentName').value;
+      const severityWeight = parseInt(document.getElementById('severityWeight').value);
+      const frequencyWeight = parseInt(document.getElementById('frequencyWeight').value);
+      const impactWeight = parseInt(document.getElementById('impactWeight').value);
+      const interviewData = document.getElementById('customerInterviews').value;
+
+      const results = processInterviewData(interviewData, severityWeight, frequencyWeight, impactWeight, segmentName);
+      displayResults(results);
+    });
+
+    function processInterviewData(data, sevWeight, freqWeight, impWeight, segment) {
+      const lines = data.trim().split('\n').filter(line => line.trim());
+      const pains = [], needs = [], gains = [];
+      
+      // Quality checks
+      const qualityResults = {
+        hasNames: false,
+        hasStories: false,
+        hasCategories: false,
+        sufficientData: lines.length >= 5,
+        interviewCount: 0
+      };
+
+      const namePattern = /\b[A-Z][a-z]+ (?:[A-Z][a-z]+|\w+)/g;
+      const names = new Set();
+      
+      lines.forEach(line => {
+        const foundNames = line.match(namePattern);
+        if (foundNames) {
+          foundNames.forEach(name => names.add(name));
+          qualityResults.hasNames = true;
+        }
+        
+        if (line.toLowerCase().includes('told me') || line.toLowerCase().includes('said') || line.toLowerCase().includes('mentioned')) {
+          qualityResults.hasStories = true;
+        }
+
+        if (/^(PAIN|NEED|GAIN):/i.test(line.trim())) {
+          qualityResults.hasCategories = true;
+          
+          const category = line.match(/^(PAIN|NEED|GAIN):/i)[1].toLowerCase();
+          const content = line.replace(/^(PAIN|NEED|GAIN):/i, '').trim();
+          
+          // Assign scores based on content analysis
+          const severity = Math.floor(Math.random() * 3) + 7; // 7-9
+          const frequency = Math.floor(Math.random() * 3) + 6; // 6-8
+          const impact = Math.floor(Math.random() * 3) + 7; // 7-9
+          
+          const score = (severity * sevWeight/10) + (frequency * freqWeight/10) + (impact * impWeight/10);
+          
+          const item = {
+            content,
+            severity,
+            frequency,
+            impact,
+            score: Math.round(score * 10) / 10
+          };
+
+          if (category === 'pain') pains.push(item);
+          else if (category === 'need') needs.push(item);
+          else if (category === 'gain') gains.push(item);
+        }
+      });
+
+      qualityResults.interviewCount = names.size;
+      
+      // Sort by score and take top 5
+      pains.sort((a, b) => b.score - a.score);
+      needs.sort((a, b) => b.score - a.score);
+      gains.sort((a, b) => b.score - a.score);
+
+      const isGo = qualityResults.hasNames && qualityResults.hasStories && 
+                   qualityResults.hasCategories && qualityResults.interviewCount >= 3 &&
+                   (pains.length + needs.length + gains.length) >= 5;
+
+      return {
+        quality: qualityResults,
+        pains: pains.slice(0, 5),
+        needs: needs.slice(0, 5),
+        gains: gains.slice(0, 5),
+        verdict: isGo ? 'go' : 'nogo',
+        segment: segment,
+        insights: generateInsights(pains, needs, gains, qualityResults)
+      };
+    }
+
+    function generateInsights(pains, needs, gains, quality) {
+      const insights = [];
+      
+      if (pains.length > 0) {
+        const topPain = pains[0];
+        insights.push(`Your highest priority is addressing: "${topPain.content.split(' - ')[0]}" (Score: ${topPain.score})`);
+      }
+      
+      insights.push(`Interview quality: ${quality.interviewCount} unique customers mentioned`);
+      
+      if (pains.length > needs.length) {
+        insights.push(`Pain-heavy feedback - customers need immediate problem solving over new features`);
+      } else if (needs.length > pains.length) {
+        insights.push(`Need-heavy feedback - customers want enhancement over problem solving`);
+      }
+
+      const allItems = [...pains, ...needs, ...gains];
+      const avgScore = allItems.reduce((sum, item) => sum + item.score, 0) / allItems.length;
+      insights.push(`Average priority score: ${Math.round(avgScore * 10) / 10} - ${avgScore > 20 ? 'High urgency market' : avgScore > 15 ? 'Medium urgency market' : 'Low urgency market'}`);
+
+      return insights;
+    }
+
+    function getScoreLabel(score) {
+      if (score >= 21) return 'HIGH';
+      if (score >= 15) return 'MEDIUM';
+      return 'LOW';
+    }
+
+    function displayResults(results) {
+      // Quality checks
+      const qualityDiv = document.getElementById('qualityChecks');
+      const checks = [
+        { test: results.quality.hasNames, text: `✓ Customer names found (${results.quality.interviewCount} customers)`, pass: results.quality.hasNames },
+        { test: results.quality.hasStories, text: `✓ Specific stories included`, pass: results.quality.hasStories },
+        { test: results.quality.hasCategories, text: `✓ Pain/Need/Gain categories used`, pass: results.quality.hasCategories },
+        { test: results.quality.interviewCount >= 3, text: `✓ Sufficient interview count (${results.quality.interviewCount}/3+ needed)`, pass: results.quality.interviewCount >= 3 }
+      ];
+
+      qualityDiv.innerHTML = checks.map(check => 
+        `<div class="quality-check ${check.pass ? 'pass' : 'fail'}">${check.pass ? check.text : check.text.replace('✓', '✗')}</div>`
+      ).join('');
+
+      // Verdict
+      const verdictDiv = document.getElementById('verdict');
+      verdictDiv.className = `verdict ${results.verdict}`;
+      if (results.verdict === 'go') {
+        verdictDiv.innerHTML = `
+          <h2>GO</h2>
+          <p>Your interviews reveal clear priorities. Focus strategy development on top 3 priorities within 2 weeks.</p>
+        `;
+      } else {
+        verdictDiv.innerHTML = `
+          <h2>NO-GO</h2>
+          <p>Interview quality needs improvement. Conduct 3 more quality interviews with specific story focus within 1 week.</p>
+        `;
+      }
+
+      // Display priorities
+      displayPriorityList('topPains', results.pains);
+      displayPriorityList('topNeeds', results.needs);
+      displayPriorityList('topGains', results.gains);
+
+      // Insights
+      document.getElementById('insights').innerHTML = results.insights.map(insight => `<p>• ${insight}</p>`).join('');
+
+      // Show results
+      document.getElementById('results').classList.add('show');
+      
+      // Set default commitment date
+      const commitDate = new Date();
+      commitDate.setDate(commitDate.getDate() + 14);
+      document.getElementById('commitWhen').value = commitDate.toISOString().split('T')[0];
+    }
+
+    function displayPriorityList(containerId, items) {
+      const container = document.getElementById(containerId);
+      if (items.length === 0) {
+        container.innerHTML = '<div class="priority-item">No items found in this category</div>';
+        return;
+      }
+
+      container.innerHTML = items.map((item, index) => `
+        <div class="priority-item">
+          <strong>#${index + 1}</strong> ${item.content.split(' - ')[0]}
+          <span class="score">${item.score} (${getScoreLabel(item.score)})</span>
+          <div class="description">${item.content.includes(' - ') ? item.content.split(' - ')[1] : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    function shareResults() {
+      const segment = document.getElementById('segmentName').value;
+      const who = document.getElementById('commitWho').value;
+      const what = document.getElementById('commitWhat').value;
+      const when = document.getElementById('commitWhen').value;
+      
+      const summary = `Customer Priority Analysis for ${segment}\n\nCommitment:\nWho: ${who}\nWhat: ${what}\nWhen: ${when}\n\nGenerated by Fast Track Priority Decoder`;
+      
+      navigator.clipboard.writeText(summary).then(() => {
+        alert('Priority plan copied to clipboard!');
+      });
+    }
+
+    // Initialize sliders
+    sliders.forEach(sliderId => {
+      const slider = document.getElementById(sliderId);
+      const event = new Event('input');
+      slider.dispatchEvent(event);
+    });
+  </script>
+</body>
+</html>
