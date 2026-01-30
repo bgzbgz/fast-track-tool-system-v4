@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Deployment Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #F5F5F5;
+      color: #333333;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    header {
+      background-color: #1A1A2E;
+      color: #FFFFFF;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    main {
+      background-color: #FFFFFF;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #1A1A2E;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #F5F5F5;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #FF5733;
+    }
+
+    button {
+      width: 100%;
+      background-color: #FF5733;
+      color: #FFFFFF;
+      padding: 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background-color: #e04a2b;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .results {
+      margin-top: 24px;
+      padding: 24px;
+      background-color: #F5F5F5;
+      border-radius: 8px;
+    }
+
+    .verdict {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .verdict.go {
+      background-color: #28a745;
+      color: #FFFFFF;
+    }
+
+    .verdict.no-go {
+      background-color: #dc3545;
+      color: #FFFFFF;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px;
+      background-color: #FFFFFF;
+      border-radius: 4px;
+    }
+
+    .check-status {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: bold;
+    }
+
+    .check-status.pass {
+      background-color: #28a745;
+    }
+
+    .check-status.fail {
+      background-color: #dc3545;
+    }
+
+    .next-steps {
+      background-color: #FFFFFF;
+      padding: 16px;
+      border-radius: 4px;
+      border-left: 4px solid #FF5733;
+      margin-top: 16px;
+    }
+
+    .next-steps h3 {
+      color: #1A1A2E;
+      margin-bottom: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 16px;
+      color: #666666;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px 12px;
+      }
+      
+      header {
+        padding: 16px;
+      }
+      
+      main {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>URL Deployment Test</h1>
+      <p class="subtitle">Verify if your deployed tool URL is displaying correctly in the Fast Track inbox</p>
+    </header>
+    
+    <main>
+      <form id="testForm">
+        <div class="form-group">
+          <label for="deployedUrl">Your Deployed Tool URL</label>
+          <input type="text" id="deployedUrl" name="deployedUrl" required placeholder="https://your-domain.com/tool.html">
+        </div>
+        
+        <div class="form-group">
+          <label for="toolName">Tool Name (as it should appear)</label>
+          <input type="text" id="toolName" name="toolName" required placeholder="Marketing ROI Calculator">
+        </div>
+        
+        <button type="submit" id="testButton">Test Deployment</button>
+      </form>
+      
+      <div id="loading" class="loading hidden">
+        Testing deployment...
+      </div>
+      
+      <div id="results" class="results hidden">
+        <div id="verdict" class="verdict"></div>
+        <div id="checkResults"></div>
+        <div id="nextSteps" class="next-steps"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('testForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const deployedUrl = document.getElementById('deployedUrl').value.trim();
+      const toolName = document.getElementById('toolName').value.trim();
+      
+      if (!deployedUrl || !toolName) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      runDeploymentTest(deployedUrl, toolName);
+    });
+    
+    async function runDeploymentTest(url, expectedName) {
+      const loadingDiv = document.getElementById('loading');
+      const resultsDiv = document.getElementById('results');
+      const testButton = document.getElementById('testButton');
+      
+      // Show loading state
+      loadingDiv.classList.remove('hidden');
+      resultsDiv.classList.add('hidden');
+      testButton.disabled = true;
+      
+      // Simulate testing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Perform checks
+      const checks = performDeploymentChecks(url, expectedName);
+      
+      // Calculate overall result
+      const passedChecks = checks.filter(check => check.passed).length;
+      const totalChecks = checks.length;
+      const allPassed = passedChecks === totalChecks;
+      
+      // Display results
+      displayResults(allPassed, checks, url);
+      
+      // Hide loading, show results
+      loadingDiv.classList.add('hidden');
+      resultsDiv.classList.remove('hidden');
+      testButton.disabled = false;
+    }
+    
+    function performDeploymentChecks(url, expectedName) {
+      const checks = [];
+      
+      // URL Format Check
+      const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+      checks.push({
+        name: 'Valid URL Format',
+        passed: urlPattern.test(url),
+        message: urlPattern.test(url) ? 'URL format is valid' : 'URL format is invalid - must start with http:// or https://'
+      });
+      
+      // HTTPS Check
+      checks.push({
+        name: 'HTTPS Protocol',
+        passed: url.toLowerCase().startsWith('https://'),
+        message: url.toLowerCase().startsWith('https://') ? 'Using secure HTTPS protocol' : 'WARNING: Using HTTP instead of HTTPS (not secure)'
+      });
+      
+      // File Extension Check
+      const hasHtmlExtension = url.toLowerCase().endsWith('.html') || url.toLowerCase().endsWith('.htm');
+      checks.push({
+        name: 'HTML File Extension',
+        passed: hasHtmlExtension,
+        message: hasHtmlExtension ? 'Proper HTML file extension detected' : 'Missing .html or .htm extension'
+      });
+      
+      // Domain Check
+      const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1');
+      checks.push({
+        name: 'Public Domain',
+        passed: !isLocalhost,
+        message: !isLocalhost ? 'Using public domain (accessible to others)' : 'Using localhost (not publicly accessible)'
+      });
+      
+      // Tool Name Check
+      const validToolName = expectedName.length >= 3 && expectedName.length <= 50;
+      checks.push({
+        name: 'Tool Name Length',
+        passed: validToolName,
+        message: validToolName ? 'Tool name is appropriate length' : 'Tool name should be 3-50 characters'
+      });
+      
+      // No Special Characters in Name
+      const namePattern = /^[a-zA-Z0-9\s\-_()]+$/;
+      checks.push({
+        name: 'Tool Name Format',
+        passed: namePattern.test(expectedName),
+        message: namePattern.test(expectedName) ? 'Tool name uses valid characters' : 'Tool name contains invalid characters (use only letters, numbers, spaces, hyphens, underscores, parentheses)'
+      });
+      
+      return checks;
+    }
+    
+    function displayResults(allPassed, checks, url) {
+      const verdictDiv = document.getElementById('verdict');
+      const checkResultsDiv = document.getElementById('checkResults');
+      const nextStepsDiv = document.getElementById('nextSteps');
+      
+      // Verdict
+      if (allPassed) {
+        verdictDiv.className = 'verdict go';
+        verdictDiv.textContent = 'GO - Deployment Ready';
+      } else {
+        verdictDiv.className = 'verdict no-go';
+        verdictDiv.textContent = 'NO-GO - Fix Issues First';
+      }
+      
+      // Check results
+      checkResultsDiv.innerHTML = '';
+      checks.forEach(check => {
+        const checkItem = document.createElement('div');
+        checkItem.className = 'check-item';
+        
+        const status = document.createElement('div');
+        status.className = `check-status ${check.passed ? 'pass' : 'fail'}`;
+        status.textContent = check.passed ? '✓' : '✗';
+        
+        const message = document.createElement('div');
+        message.innerHTML = `<strong>${check.name}:</strong> ${check.message}`;
+        
+        checkItem.appendChild(status);
+        checkItem.appendChild(message);
+        checkResultsDiv.appendChild(checkItem);
+      });
+      
+      // Next steps
+      nextStepsDiv.innerHTML = '';
+      const nextStepsTitle = document.createElement('h3');
+      nextStepsTitle.textContent = 'Next Steps';
+      nextStepsDiv.appendChild(nextStepsTitle);
+      
+      if (allPassed) {
+        const successMessage = document.createElement('p');
+        successMessage.innerHTML = `Your tool deployment passes all checks. <strong>ACTION:</strong> Submit your URL (${url}) to the Fast Track inbox for review.`;
+        nextStepsDiv.appendChild(successMessage);
+      } else {
+        const failureMessage = document.createElement('p');
+        failureMessage.innerHTML = '<strong>ACTION:</strong> Fix all failed checks above before submitting to the Fast Track inbox. Each issue must be resolved for successful deployment.';
+        nextStepsDiv.appendChild(failureMessage);
+      }
+    }
+  </script>
+</body>
+</html>
