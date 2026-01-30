@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Decision Tool - Fast Track</title>
+  <style>
+    /* FAST TRACK BRAND FONTS */
+    @font-face {
+      font-family: 'Plaak';
+      src: url('https://bgzbgz.github.io/fast-track-tool-system-v4/fonts/Plaak3Trial-43-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riforma';
+      src: url('https://bgzbgz.github.io/fast-track-tool-system-v4/fonts/RiformaLL-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Monument Grotesk Mono';
+      src: url('https://bgzbgz.github.io/fast-track-tool-system-v4/fonts/MonumentGrotesk-Mono.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --black: #000000;
+      --white: #FFFFFF;
+      --yellow: #FFF469;
+      --grey: #B2B2B2;
+      --font-headline: 'Plaak', system-ui, sans-serif;
+      --font-body: 'Riforma', system-ui, sans-serif;
+      --font-mono: 'Monument Grotesk Mono', monospace;
+    }
+
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--black);
+      background: var(--white);
+      min-height: 100vh;
+    }
+
+    /* Tool container */
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+    /* Header - Fast Track brand */
+    header {
+      background: var(--black);
+      color: var(--white);
+      padding: 32px 24px;
+      text-align: center;
+      border: 2px solid var(--black);
+    }
+    header h1 {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 1.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+    }
+    header .subtitle {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--grey);
+      letter-spacing: 0.05em;
+    }
+
+    /* Progress indicator */
+    .progress { display: flex; gap: 4px; margin: 24px 0; }
+    .progress-step { flex: 1; height: 4px; background: var(--grey); }
+    .progress-step.complete { background: var(--yellow); }
+
+    /* Form styling */
+    .form-group { margin-bottom: 24px; }
+    label {
+      display: block;
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+      color: var(--black);
+    }
+    .help-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-top: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--black);
+      background: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--yellow);
+      background: #FFFEF0;
+    }
+    input.valid { border-color: var(--black); background: #F8FFF8; }
+    input.invalid { border-color: var(--black); background: #FFF8F8; }
+
+    /* Submit button - Fast Track style */
+    button[type="submit"], .btn-primary {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--yellow);
+      color: var(--black);
+      border: 2px solid var(--black);
+      font-family: var(--font-headline);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      min-height: 44px;
+      transition: background 0.15s ease;
+    }
+    button[type="submit"]:hover, .btn-primary:hover {
+      background: var(--white);
+    }
+    button[type="submit"]:disabled {
+      background: var(--grey);
+      color: var(--white);
+      cursor: not-allowed;
+    }
+
+    /* Results section */
+    .results {
+      display: none;
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--white);
+      border: 2px solid var(--black);
+    }
+    .results.show { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Verdict display - GO/NO-GO */
+    .verdict {
+      text-align: center;
+      padding: 32px;
+      margin: 24px 0;
+      background: var(--white);
+      color: var(--black);
+      border: 2px solid var(--black);
+    }
+    .verdict.go {
+      border-left: 8px solid var(--yellow);
+    }
+    .verdict.nogo {
+      border-left: 8px solid var(--black);
+    }
+    .verdict h2 {
+      font-family: var(--font-headline);
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .verdict p {
+      font-family: var(--font-body);
+      font-size: 16px;
+    }
+
+    /* Result values */
+    .result-value {
+      text-align: center;
+      padding: 24px;
+      margin: 16px 0;
+      border: 2px solid var(--black);
+    }
+    .result-value h3 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 8px;
+    }
+    .result-value .big-number {
+      font-family: var(--font-headline);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    /* Commitment section */
+    .commitment {
+      background: var(--white);
+      padding: 24px;
+      margin-top: 24px;
+      border: 2px solid var(--black);
+    }
+    .commitment h3 {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+
+    /* Validation messages */
+    .error-message {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--yellow);
+      padding: 4px 8px;
+      margin-top: 4px;
+      display: none;
+    }
+    .error-message.show { display: inline-block; }
+
+    /* Case Studies Button */
+    .case-studies-btn {
+      width: 100%;
+      padding: 12px 24px;
+      background: var(--white);
+      color: var(--black);
+      border: 2px solid var(--black);
+      font-family: var(--font-headline);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: background 0.15s ease;
+    }
+    .case-studies-btn:hover {
+      background: var(--yellow);
+    }
+
+    /* Case Studies Modal */
+    .case-studies-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .case-studies-modal.show { display: block; }
+    .case-studies-content {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 32px;
+      background: var(--white);
+      border: 2px solid var(--black);
+    }
+    .case-studies-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--black);
+    }
+    .case-studies-header h2 {
+      font-family: var(--font-headline);
+      font-size: 24px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 32px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .case-study {
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 2px solid var(--black);
+    }
+    .case-study:last-child { margin-bottom: 0; }
+    .case-study-title {
+      font-family: var(--font-headline);
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .case-study-location {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 16px;
+    }
+    .case-study-story {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .case-study-results {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .case-study-metric {
+      flex: 1;
+      min-width: 120px;
+      padding: 16px;
+      background: var(--black);
+      color: var(--white);
+      text-align: center;
+    }
+    .metric-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+    .metric-value {
+      font-family: var(--font-headline);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+    .case-study-quote {
+      font-family: var(--font-body);
+      font-style: italic;
+      padding: 16px;
+      border-left: 4px solid var(--yellow);
+      margin-top: 16px;
+      background: #FFFEF0;
+    }
+
+    /* Step counter */
+    .step-counter {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 24px;
+    }
+
+    /* Alternative action */
+    .alternative-action {
+      margin-top: 16px;
+      padding: 16px;
+      background: #FFFEF0;
+      border-left: 4px solid var(--yellow);
+    }
+    .alternative-action p {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>THE BUDGET DECISION TOOL</h1>
+      <p class="subtitle">KNOW IF YOU CAN AFFORD IT BEFORE YOU COMMIT</p>
+    </header>
+
+    <!-- Step counter -->
+    <div class="step-counter">STEP <span id="currentStep">1</span> OF <span id="totalSteps">2</span></div>
+
+    <!-- Progress indicator -->
+    <div class="progress">
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+    </div>
+
+    <main>
+      <form id="toolForm">
+        <!-- Budget input -->
+        <div class="form-group">
+          <label for="budget">YOUR AVAILABLE BUDGET</label>
+          <input type="number" id="budget" placeholder="25000" required min="0" step="0.01">
+          <div class="help-text">HOW MUCH YOU CAN SPEND WITHOUT BREAKING THINGS</div>
+          <div class="error-message" id="budget-error">ENTER YOUR BUDGET AMOUNT</div>
+        </div>
+
+        <!-- Cost input -->
+        <div class="form-group">
+          <label for="cost">TOTAL COST</label>
+          <input type="number" id="cost" placeholder="8500" required min="0" step="0.01">
+          <div class="help-text">WHAT THIS WILL ACTUALLY COST YOU (INCLUDING FEES, TAXES, EVERYTHING)</div>
+          <div class="error-message" id="cost-error">ENTER THE TOTAL COST</div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>CHECK MY BUDGET</button>
+      </form>
+
+      <div id="results" class="results">
+        <!-- Primary result with interpretation -->
+        <div class="result-value">
+          <h3 id="budgetStatusLabel">YOUR BUDGET STATUS</h3>
+          <div class="big-number" id="budgetAmount">$0</div>
+          <p class="interpretation" id="budgetInterpretation">Budget check complete</p>
+        </div>
+
+        <!-- The verdict - white bg, black text, yellow accent for GO -->
+        <div id="verdict" class="verdict go">
+          <h2 id="verdictText">GO</h2>
+          <p id="verdictDescription">You can afford this purchase.</p>
+          <div id="alternativeAction" class="alternative-action" style="display:none;">
+            <p id="alternativeText">Consider these options instead</p>
+          </div>
+        </div>
+
+        <!-- Commitment section (WWW) -->
+        <div class="commitment">
+          <h3>LOCK IN YOUR DECISION</h3>
+          <p>Based on this result, I commit to:</p>
+          <div class="form-group">
+            <label>WHO'S HANDLING THIS PURCHASE?</label>
+            <input type="text" id="commitWho" placeholder="John Smith (not 'The Team')">
+          </div>
+          <div class="form-group">
+            <label>WHAT'S YOUR NEXT MOVE?</label>
+            <input type="text" id="commitWhat" placeholder="Contact vendor and negotiate final terms">
+          </div>
+          <div class="form-group">
+            <label>WHEN WILL YOU ACT?</label>
+            <input type="date" id="commitWhen">
+          </div>
+          <button type="button" class="btn-primary" onclick="shareResults()">SHARE THIS CHECK</button>
+        </div>
+
+        <!-- Case Studies Button -->
+        <button type="button" class="case-studies-btn" onclick="showCaseStudies()">
+          SEE HOW OTHERS APPLIED THIS
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Case Studies Modal -->
+  <div id="caseStudiesModal" class="case-studies-modal">
+    <div class="case-studies-content">
+      <div class="case-studies-header">
+        <h2>REAL RESULTS FROM FAST TRACK CLIENTS</h2>
+        <button class="close-modal" onclick="closeCaseStudies()">&times;</button>
+      </div>
+
+      <!-- Case Study 1: GO Example -->
+      <div class="case-study">
+        <div class="case-study-title">HOW PRIYA FROM COLOMBO AVOIDED A $12K SOFTWARE DISASTER</div>
+        <div class="case-study-location">COLOMBO, SRI LANKA | DIGITAL MARKETING AGENCY</div>
+        <div class="case-study-story">
+          Sales team was pushing for expensive marketing automation software upgrade mid-quarter. Priya used the tool to check $18K available budget against $12K software cost. The GO verdict with $6K buffer gave her confidence to approve the purchase without stress.
+        </div>
+        <div class="case-study-results">
+          <div class="case-study-metric">
+            <div class="metric-label">CLIENT RETENTION</div>
+            <div class="metric-value">78% → 94%</div>
+          </div>
+          <div class="case-study-metric">
+            <div class="metric-label">MONTHLY REVENUE</div>
+            <div class="metric-value">+30%</div>
+          </div>
+        </div>
+        <div class="case-study-quote">"Instead of stressing about whether we could afford it, I knew instantly we had the buffer. The software paid for itself in two months through better client campaigns."</div>
+      </div>
+
+      <!-- Case Study 2: NO-GO Example -->
+      <div class="case-study">
+        <div class="case-study-title">HOW JAMES FROM MANCHESTER SAID NO TO A $25K CONSULTANT</div>
+        <div class="case-study-location">MANCHESTER, UK | BUSINESS CONSULTING</div>
+        <div class="case-study-story">
+          High-profile consultant offered 6-month partnership requiring £25K upfront. The tool showed James was £10K short of his £15K available budget. The clear NO-GO verdict helped him decline and invest £8K in targeted marketing instead.
+        </div>
+        <div class="case-study-results">
+          <div class="case-study-metric">
+            <div class="metric-label">MONEY SAVED</div>
+            <div class="metric-value">£25K</div>
+          </div>
+          <div class="case-study-metric">
+            <div class="metric-label">REVENUE GROWTH</div>
+            <div class="metric-value">75%</div>
+          </div>
+        </div>
+        <div class="case-study-quote">"The tool showed me I'd be £10K short. That cold math saved me from a decision that would have killed my business. The smaller marketing investment actually delivered better results."</div>
+      </div>
+
+      <!-- Case Study 3: Transformation Story -->
+      <div class="case-study">
+        <div class="case-study-title">HOW SOFIA FROM AUSTIN SCALED HER FOOD TRUCK WITH SMART EQUIPMENT DECISIONS</div>
+        <div class="case-study-location">AUSTIN, TEXAS | FOOD SERVICE</div>
+        <div class="case-study-story">
+          Sofia needed new prep equipment to handle growing lunch crowds. She tested multiple vendor quotes against her $9K budget. The tool helped her choose the $7,800 option over the $12K deluxe version, keeping $1,200 buffer for unexpected costs.
+        </div>
+        <div class="case-study-results">
+          <div class="case-study-metric">
+            <div class="metric-label">DAILY ORDERS</div>
+            <div class="metric-value">85 → 125</div>
+          </div>
+          <div class="case-study-metric">
+            <div class="metric-label">TIME SAVINGS</div>
+            <div class="metric-value">50%</div>
+          </div>
+        </div>
+        <div class="case-study-quote">"Having that $1,200 buffer left over was crucial when the health department required unexpected upgrades. The right-sized equipment kept me profitable and prepared."</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== CONFIGURATION ==========
+    const TOOL_SLUG = 'budget-decision-tool';
+    const API_BASE = 'https://the-system-production.up.railway.app';
+
+    // ========== FORM HANDLING ==========
+    const form = document.getElementById('toolForm');
+    const inputs = form.querySelectorAll('input');
+    const submitBtn = document.getElementById('submitBtn');
+    const currentStepSpan = document.getElementById('currentStep');
+    const totalStepSpan = document.getElementById('totalSteps');
+
+    // Set total steps
+    totalStepSpan.textContent = '2';
+
+    // Real-time validation
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', function(e) {
+        validateInput(e);
+        updateStepCounter();
+      });
+    });
+
+    function validateInput(e) {
+      const input = e.target;
+      const errorEl = document.getElementById(input.id + '-error');
+      
+      if (input.value && parseFloat(input.value) > 0) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        errorEl.classList.remove('show');
+      } else if (input.value) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        errorEl.textContent = 'ENTER A NUMBER ABOVE ZERO';
+        errorEl.classList.add('show');
+      } else {
+        input.classList.remove('valid', 'invalid');
+        errorEl.textContent = input.id === 'budget' ? 'ENTER YOUR BUDGET AMOUNT' : 'ENTER THE TOTAL COST';
+        errorEl.classList.add('show');
+      }
+      
+      updateProgress();
+    }
+
+    function updateStepCounter() {
+      const validInputs = form.querySelectorAll('input.valid').length;
+      currentStepSpan.textContent = Math.min(validInputs + 1, 2);
+    }
+
+    function updateProgress() {
+      const steps = document.querySelectorAll('.progress-step');
+      const validInputs = form.querySelectorAll('input.valid').length;
+      
+      steps.forEach((step, i) => {
+        step.classList.toggle('complete', i < validInputs);
+      });
+      
+      // Enable submit button when all inputs are valid
+      const allValid = form.querySelectorAll('input.valid').length === 2;
+      submitBtn.disabled = !allValid;
+    }
+
+    // ========== FORM SUBMISSION ==========
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Get input values
+      const budget = parseFloat(document.getElementById('budget').value) || 0;
+      const cost = parseFloat(document.getElementById('cost').value) || 0;
+
+      const inputData = { budget, cost };
+      
+      // Calculate result
+      const result = calculateResult(inputData);
+
+      // Display results
+      displayResults(result);
+
+      // Save to MongoDB
+      saveResponse(inputData, result);
+    });
+
+    // ========== SAVE RESPONSE TO MONGODB ==========
+    async function saveResponse(inputData, result) {
+      try {
+        const response = await fetch(API_BASE + '/api/tools/' + TOOL_SLUG + '/responses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            inputs: inputData,
+            result: result,
+            completedAt: new Date().toISOString(),
+            source: 'web',
+            referrer: document.referrer || window.location.href
+          })
+        });
+
+        if (response.ok) {
+          console.log('Response saved to MongoDB');
+        }
+      } catch (error) {
+        console.error('Failed to save response:', error);
+      }
+    }
+
+    // ========== CALCULATE RESULT ==========
+    function calculateResult(inputs) {
+      const { budget, cost } = inputs;
+      const difference = budget - cost;
+      
+      let verdict, interpretation, nextStep, alternative;
+      
+      if (difference > 0) {
+        verdict = 'GO';
+        interpretation = `You'll have $${formatNumber(difference)} left in your budget. That's enough cushion to move forward.`;
+        nextStep = 'Make the purchase and update your budget tracking';
+      } else if (difference === 0) {
+        verdict = 'NO-GO';
+        interpretation = 'Zero buffer remaining creates cash flow risk. You need a small cushion.';
+        alternative = 'Negotiate the price down by at least 10% or find more budget before committing';
+      } else {
+        verdict = 'NO-GO';
+        interpretation = `You're $${formatNumber(Math.abs(difference))} short. This purchase puts you in the red.`;
+        alternative = 'Negotiate the price down or find more budget before committing';
+      }
+
+      return {
+        budget,
+        cost,
+        difference,
+        verdict,
+        interpretation,
+        nextStep,
+        alternative
+      };
+    }
+
+    // ========== DISPLAY RESULTS ==========
+    function displayResults(result) {
+      document.getElementById('results').classList.add('show');
+
+      // Update budget status
+      document.getElementById('budgetStatusLabel').textContent = result.verdict === 'GO' ? 'REMAINING BUDGET' : 'BUDGET SHORTFALL';
+      document.getElementById('budgetAmount').textContent = result.verdict === 'GO' ? 
+        '$' + formatNumber(result.difference) : 
+        '-$' + formatNumber(Math.abs(result.difference));
+      document.getElementById('budgetInterpretation').textContent = result.interpretation;
+
+      // Update verdict
+      const verdictEl = document.getElementById('verdict');
+      const verdictText = document.getElementById('verdictText');
+      const verdictDesc = document.getElementById('verdictDescription');
+      const alternativeEl = document.getElementById('alternativeAction');
+      const alternativeText = document.getElementById('alternativeText');
+
+      if (result.verdict === 'GO') {
+        verdictEl.className = 'verdict go';
+        verdictText.textContent = 'GO. YOU CAN AFFORD THIS.';
+        verdictDesc.textContent = result.nextStep;
+        alternativeEl.style.display = 'none';
+      } else {
+        verdictEl.className = 'verdict nogo';
+        verdictText.textContent = 'STOP. THIS BREAKS YOUR BUDGET.';
+        verdictDesc.textContent = result.interpretation;
+        alternativeText.textContent = result.alternative;
+        alternativeEl.style.display = 'block';
+      }
+
+      // Scroll to results
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ========== UTILITY FUNCTIONS ==========
+    function formatNumber(num) {
+      return new Intl.NumberFormat('en-US').format(num);
+    }
+
+    // ========== SHARE FUNCTIONALITY ==========
+    function shareResults() {
+      const who = document.getElementById('commitWho').value;
+      const what = document.getElementById('commitWhat').value;
+      const when = document.getElementById('commitWhen').value;
+      const budget = document.getElementById('budget').value;
+      const cost = document.getElementById('cost').value;
+
+      const verdict = document.getElementById('verdictText').textContent;
+
+      const summary = `BUDGET DECISION: ${verdict}\n\n` +
+        `Budget: $${formatNumber(budget)}\n` +
+        `Cost: $${formatNumber(cost)}\n\n` +
+        `MY COMMITMENT:\n` +
+        `Who: ${who || '[Not specified]'}\n` +
+        `What: ${what || '[Not specified]'}\n` +
+        `When: ${when || '[Not specified]'}`;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(summary).then(() => {
+          alert('Results copied to clipboard!');
+        });
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = summary;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Results copied to clipboard!');
+      }
+    }
+
+    // ========== CASE STUDIES MODAL ==========
+    function showCaseStudies() {
+      document.getElementById('caseStudiesModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCaseStudies() {
+      document.getElementById('caseStudiesModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeCaseStudies();
+      }
+    });
+
+    // Close modal when clicking outside content
+    document.getElementById('caseStudiesModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeCaseStudies();
+      }
+    });
+  </script>
+</body>
+</html>
