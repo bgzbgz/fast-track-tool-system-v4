@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Size Expansion Decision Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      background-color: #F5F5F5;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    header {
+      background-color: #1A1A2E;
+      color: #FFFFFF;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    main {
+      background-color: #FFFFFF;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: bold;
+      color: #1A1A2E;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #FF5733;
+    }
+
+    button {
+      width: 100%;
+      background-color: #FF5733;
+      color: #FFFFFF;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    button:hover {
+      background-color: #e54d2b;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .results {
+      margin-top: 24px;
+      padding: 24px;
+      background-color: #F5F5F5;
+      border-radius: 8px;
+    }
+
+    .verdict {
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .verdict.go {
+      background-color: #28a745;
+      color: #FFFFFF;
+    }
+
+    .verdict.no-go {
+      background-color: #dc3545;
+      color: #FFFFFF;
+    }
+
+    .analysis {
+      background-color: #FFFFFF;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F5F5;
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      font-weight: bold;
+      color: #1A1A2E;
+    }
+
+    .metric-value {
+      color: #FF5733;
+      font-weight: bold;
+    }
+
+    .next-step {
+      background-color: #1A1A2E;
+      color: #FFFFFF;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 8px;
+      }
+      
+      header, main {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Market Size Expansion Decision Tool</h1>
+      <p class="subtitle">Determine if you should expand into a market segment based on its profit potential</p>
+    </header>
+    <main>
+      <form id="toolForm">
+        <div class="form-group">
+          <label for="potentialCustomers">Number of potential customers in this market</label>
+          <input type="number" id="potentialCustomers" min="1" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="purchaseFrequency">Average purchases per customer per year</label>
+          <input type="number" id="purchaseFrequency" min="0.1" step="0.1" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="averagePrice">Average price per unit ($)</label>
+          <input type="number" id="averagePrice" min="0.01" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="grossMargin">Estimated gross margin (%)</label>
+          <input type="number" id="grossMargin" min="0" max="100" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="investmentThreshold">Your minimum profit pool threshold ($)</label>
+          <input type="number" id="investmentThreshold" min="1" required>
+        </div>
+        
+        <button type="submit">Analyze Market Expansion</button>
+      </form>
+      
+      <div id="results" class="hidden">
+        <div class="results">
+          <div id="verdict" class="verdict"></div>
+          
+          <div class="analysis">
+            <h3>Market Analysis</h3>
+            <div class="metric">
+              <span class="metric-label">Market Size (Annual Revenue)</span>
+              <span class="metric-value" id="marketSize"></span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Profit Pool</span>
+              <span class="metric-value" id="profitPool"></span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Your Threshold</span>
+              <span class="metric-value" id="threshold"></span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Profit Multiple</span>
+              <span class="metric-value" id="multiple"></span>
+            </div>
+          </div>
+          
+          <div class="next-step" id="nextStep"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('toolForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const potentialCustomers = parseFloat(document.getElementById('potentialCustomers').value);
+      const purchaseFrequency = parseFloat(document.getElementById('purchaseFrequency').value);
+      const averagePrice = parseFloat(document.getElementById('averagePrice').value);
+      const grossMargin = parseFloat(document.getElementById('grossMargin').value);
+      const investmentThreshold = parseFloat(document.getElementById('investmentThreshold').value);
+      
+      // Validate inputs
+      if (potentialCustomers <= 0 || purchaseFrequency <= 0 || averagePrice <= 0 || 
+          grossMargin < 0 || grossMargin > 100 || investmentThreshold <= 0) {
+        alert('Please enter valid positive numbers. Gross margin must be between 0-100%.');
+        return;
+      }
+      
+      // Calculate market size and profit pool
+      const marketSize = potentialCustomers * purchaseFrequency * averagePrice;
+      const profitPool = marketSize * (grossMargin / 100);
+      const profitMultiple = profitPool / investmentThreshold;
+      
+      // Format numbers for display
+      const formatCurrency = (amount) => {
+        if (amount >= 1000000) {
+          return '$' + (amount / 1000000).toFixed(1) + 'M';
+        } else if (amount >= 1000) {
+          return '$' + (amount / 1000).toFixed(0) + 'K';
+        } else {
+          return '$' + amount.toFixed(0);
+        }
+      };
+      
+      // Update display elements
+      document.getElementById('marketSize').textContent = formatCurrency(marketSize);
+      document.getElementById('profitPool').textContent = formatCurrency(profitPool);
+      document.getElementById('threshold').textContent = formatCurrency(investmentThreshold);
+      document.getElementById('multiple').textContent = profitMultiple.toFixed(1) + 'x';
+      
+      const verdictElement = document.getElementById('verdict');
+      const nextStepElement = document.getElementById('nextStep');
+      
+      if (profitPool >= investmentThreshold) {
+        verdictElement.className = 'verdict go';
+        verdictElement.textContent = 'GO - EXPAND INTO THIS MARKET';
+        
+        if (profitMultiple >= 3) {
+          nextStepElement.innerHTML = 'ACTION: Begin market entry planning immediately. This is a high-priority opportunity with ' + profitMultiple.toFixed(1) + 'x your threshold.';
+        } else {
+          nextStepElement.innerHTML = 'ACTION: Proceed with expansion but monitor carefully. Profit pool meets threshold at ' + profitMultiple.toFixed(1) + 'x your minimum.';
+        }
+      } else {
+        verdictElement.className = 'verdict no-go';
+        verdictElement.textContent = 'NO-GO - DO NOT EXPAND';
+        
+        const shortfall = investmentThreshold - profitPool;
+        const shortfallPercent = ((shortfall / investmentThreshold) * 100).toFixed(0);
+        
+        nextStepElement.innerHTML = 'DECISION: Market falls short by ' + formatCurrency(shortfall) + ' (' + shortfallPercent + '%). Focus resources on markets above your threshold.';
+      }
+      
+      // Show results
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
