@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance System Diagnostic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { font-family: Arial, Helvetica, sans-serif; background-color: #F5F5F5; color: #333333; line-height: 1.6; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+    header { 
+      background: #1A1A2E; 
+      color: white; 
+      padding: 24px; 
+      border-radius: 8px; 
+      text-align: center; 
+      margin-bottom: 24px;
+    }
+
+    header h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; opacity: 0.9; }
+
+    .progress { 
+      display: flex; 
+      gap: 8px; 
+      margin: 16px 0; 
+    }
+    .progress-step { 
+      flex: 1; 
+      height: 4px; 
+      background: #F5F5F5; 
+      border-radius: 2px; 
+      transition: background-color 0.3s;
+    }
+    .progress-step.complete { background: #FF5733; }
+
+    .form-section {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group { margin-bottom: 20px; }
+    
+    label { 
+      display: block; 
+      font-weight: bold; 
+      margin-bottom: 6px; 
+      color: #1A1A2E; 
+      font-size: 14px;
+    }
+    
+    .help-text { 
+      font-size: 12px; 
+      color: #666; 
+      margin-top: 4px; 
+    }
+    
+    input, select { 
+      width: 100%; 
+      padding: 12px; 
+      border: 2px solid #F5F5F5; 
+      border-radius: 4px; 
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus, select:focus { 
+      border-color: #FF5733; 
+      outline: none; 
+    }
+    
+    input.valid { border-color: #28a745; }
+    input.invalid { border-color: #dc3545; }
+
+    select.valid { border-color: #28a745; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      background: #FF5733;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 16px;
+    }
+    
+    button[type="submit"]:hover:not(:disabled) { background: #E64A2E; }
+    button[type="submit"]:disabled { 
+      background: #ccc; 
+      cursor: not-allowed; 
+    }
+
+    .results { 
+      display: none; 
+      margin-top: 24px;
+    }
+    
+    .results.show { 
+      display: block; 
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .score-card {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid #F5F5F5;
+    }
+
+    .score-card.constraint {
+      border-color: #dc3545;
+      background: #f8d7da;
+    }
+
+    .score-number {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .verdict { 
+      text-align: center; 
+      padding: 24px; 
+      border-radius: 8px; 
+      margin: 20px 0;
+    }
+    
+    .verdict.go { 
+      background: #d4edda; 
+      border: 2px solid #28a745; 
+    }
+    
+    .verdict.nogo { 
+      background: #f8d7da; 
+      border: 2px solid #dc3545; 
+    }
+    
+    .verdict h2 { 
+      font-size: 32px; 
+      margin-bottom: 8px; 
+    }
+    
+    .verdict.go h2 { color: #28a745; }
+    .verdict.nogo h2 { color: #dc3545; }
+
+    .constraint-alert {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .constraint-alert h3 {
+      color: #856404;
+      margin-bottom: 8px;
+    }
+
+    .overall-score {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 16px 0;
+      border: 2px solid #F5F5F5;
+    }
+
+    .overall-score .big-number {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .overall-score.good { border-color: #28a745; background: #d4edda; }
+    .overall-score.warning { border-color: #ffc107; background: #fff3cd; }
+    .overall-score.bad { border-color: #dc3545; background: #f8d7da; }
+
+    .overall-score.good .big-number { color: #28a745; }
+    .overall-score.warning .big-number { color: #856404; }
+    .overall-score.bad .big-number { color: #dc3545; }
+
+    .commitment { 
+      background: #F5F5F5; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin-top: 20px; 
+    }
+
+    .commitment h3 {
+      color: #1A1A2E;
+      margin-bottom: 12px;
+    }
+
+    .commitment input {
+      margin-bottom: 12px;
+    }
+
+    .share-button {
+      background: #1A1A2E;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .share-button:hover { background: #0F0F1A; }
+
+    .error-message { 
+      color: #dc3545; 
+      font-size: 12px; 
+      margin-top: 4px; 
+      display: none; 
+    }
+    
+    .error-message.show { display: block; }
+
+    .step-counter {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .checkmark {
+      color: #28a745;
+      display: none;
+      float: right;
+    }
+
+    .checkmark.show {
+      display: inline;
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 12px; }
+      header { padding: 20px; }
+      .form-section { padding: 20px; }
+      .verdict h2 { font-size: 28px; }
+      .overall-score .big-number { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Performance System Diagnostic</h1>
+      <p class="subtitle">Find out if you need to redesign or optimize your performance system</p>
+    </header>
+
+    <div class="progress">
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+      <div class="progress-step" data-step="3"></div>
+      <div class="progress-step" data-step="4"></div>
+      <div class="progress-step" data-step="5"></div>
+    </div>
+
+    <main>
+      <div class="form-section">
+        <div class="step-counter">Step 1 of 5</div>
+        <form id="toolForm">
+          <div class="form-group">
+            <label for="tasksAssigned">Tasks assigned to your team (last 30 days) <span class="checkmark" id="check1">✓</span></label>
+            <input type="number" id="tasksAssigned" placeholder="47" required min="1">
+            <div class="help-text">Count all tasks given to your team in the past month</div>
+            <div class="error-message">Please enter a number greater than 0</div>
+          </div>
+
+          <div class="form-group">
+            <label for="tasksCompleted">Tasks actually completed (DONE, not in progress) <span class="checkmark" id="check2">✓</span></label>
+            <input type="number" id="tasksCompleted" placeholder="34" required min="0">
+            <div class="help-text">Only count tasks that are 100% finished</div>
+            <div class="error-message">Cannot be more than tasks assigned</div>
+          </div>
+
+          <div class="form-group">
+            <label for="goalsAligned">Tasks aligned with quarterly goals <span class="checkmark" id="check3">✓</span></label>
+            <input type="number" id="goalsAligned" placeholder="28" required min="0">
+            <div class="help-text">How many of the assigned tasks support your quarterly objectives?</div>
+            <div class="error-message">Cannot be more than tasks assigned</div>
+          </div>
+
+          <div class="form-group">
+            <label for="rootCauseAnalyses">Failed tasks with root cause analysis done <span class="checkmark" id="check4">✓</span></label>
+            <input type="number" id="rootCauseAnalyses" placeholder="8" required min="0">
+            <div class="help-text">When tasks failed, did you analyze WHY they failed?</div>
+            <div class="error-message">Cannot be more than failed tasks</div>
+          </div>
+
+          <div class="form-group">
+            <label for="accountabilityPractices">Accountability practices currently in place <span class="checkmark" id="check5">✓</span></label>
+            <select id="accountabilityPractices" required>
+              <option value="">Select how many you actually use</option>
+              <option value="0">None - we just hope for the best</option>
+              <option value="1">1 practice - basic tracking only</option>
+              <option value="2">2 practices - tracking + some reviews</option>
+              <option value="3">3 practices - tracking, reviews, consequences</option>
+              <option value="4">All 4 - tracking, reviews, consequences, adjustments</option>
+            </select>
+            <div class="help-text">Be honest about what you consistently do, not what you plan to do</div>
+            <div class="error-message">Please select your current practices</div>
+          </div>
+
+          <button type="submit" id="submitButton" disabled>Diagnose My Performance System</button>
+        </form>
+      </div>
+
+      <div id="results" class="results">
+        <div class="overall-score" id="overallScore">
+          <h3>Your Performance Readiness Score</h3>
+          <div class="big-number" id="totalScore">75%</div>
+          <p id="scoreInterpretation">Your system has a solid foundation</p>
+        </div>
+
+        <div class="scores-grid">
+          <div class="score-card" id="completionCard">
+            <div class="score-number" id="completionRate">72%</div>
+            <div class="score-label">Completion Rate</div>
+          </div>
+          <div class="score-card" id="alignmentCard">
+            <div class="score-number" id="alignmentRate">82%</div>
+            <div class="score-label">Goal Alignment</div>
+          </div>
+          <div class="score-card" id="analysisCard">
+            <div class="score-number" id="analysisRate">62%</div>
+            <div class="score-label">Root Cause Analysis</div>
+          </div>
+          <div class="score-card" id="accountabilityCard">
+            <div class="score-number" id="accountabilityScore">75%</div>
+            <div class="score-label">Accountability Practices</div>
+          </div>
+        </div>
+
+        <div class="constraint-alert" id="constraintAlert">
+          <h3>🎯 Your Primary Constraint</h3>
+          <p id="constraintText">Root Cause Analysis is your weakest link</p>
+        </div>
+
+        <div id="verdict" class="verdict">
+          <h2>OPTIMIZE</h2>
+          <p id="verdictText">Your system works but has room for improvement. Focus on your constraint first.</p>
+        </div>
+
+        <div class="commitment">
+          <h3>My Commitment</h3>
+          <p>Based on this diagnosis, I commit to:</p>
+          <div class="form-group">
+            <label>Who will own this improvement?</label>
+            <input type="text" id="commitWho" placeholder="Sarah Johnson (not 'The Team')">
+          </div>
+          <div class="form-group">
+            <label>What specific action will you take?</label>
+            <input type="text" id="commitWhat" placeholder="Implement weekly root cause review meetings">
+          </div>
+          <div class="form-group">
+            <label>By when will this be done?</label>
+            <input type="date" id="commitWhen">
+          </div>
+          <button type="button" class="share-button" onclick="shareResults()">Share My Diagnosis</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('toolForm');
+    const inputs = form.querySelectorAll('input, select');
+    const submitButton = document.getElementById('submitButton');
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('commitWhen').setAttribute('min', today);
+
+    // Real-time validation
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', function() {
+        validateInput(input, index + 1);
+        updateProgress();
+        checkFormValidity();
+      });
+    });
+
+    function validateInput(input, stepNumber) {
+      const errorMsg = input.parentNode.querySelector('.error-message');
+      const checkmark = document.getElementById(`check${stepNumber}`);
+      let isValid = false;
+
+      if (input.type === 'number') {
+        const value = parseInt(input.value);
+        const assigned = parseInt(document.getElementById('tasksAssigned').value) || 0;
+        
+        if (input.id === 'tasksAssigned') {
+          isValid = value > 0;
+          if (!isValid && input.value) {
+            errorMsg.textContent = 'Please enter a number greater than 0';
+            errorMsg.classList.add('show');
+          } else {
+            errorMsg.classList.remove('show');
+          }
+        } else if (input.id === 'tasksCompleted' || input.id === 'goalsAligned') {
+          isValid = value >= 0 && value <= assigned && assigned > 0;
+          if (!isValid && input.value && assigned > 0) {
+            errorMsg.textContent = 'Cannot be more than tasks assigned';
+            errorMsg.classList.add('show');
+          } else {
+            errorMsg.classList.remove('show');
+          }
+        } else if (input.id === 'rootCauseAnalyses') {
+          const completed = parseInt(document.getElementById('tasksCompleted').value) || 0;
+          const failed = assigned - completed;
+          isValid = value >= 0 && (failed === 0 || value <= failed);
+          if (!isValid && input.value && failed > 0) {
+            errorMsg.textContent = 'Cannot be more than failed tasks';
+            errorMsg.classList.add('show');
+          } else {
+            errorMsg.classList.remove('show');
+          }
+        }
+      } else if (input.tagName === 'SELECT') {
+        isValid = input.value !== '';
+        if (!isValid) {
+          errorMsg.textContent = 'Please select your current practices';
+          errorMsg.classList.add('show');
+        } else {
+          errorMsg.classList.remove('show');
+        }
+      }
+
+      if (isValid && input.value) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        if (checkmark) checkmark.classList.add('show');
+      } else if (input.value) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        if (checkmark) checkmark.classList.remove('show');
+      } else {
+        input.classList.remove('valid', 'invalid');
+        if (checkmark) checkmark.classList.remove('show');
+      }
+    }
+
+    function updateProgress() {
+      const steps = document.querySelectorAll('.progress-step');
+      const validInputs = form.querySelectorAll('input.valid, select.valid').length;
+      
+      steps.forEach((step, i) => {
+        step.classList.toggle('complete', i < validInputs);
+      });
+    }
+
+    function checkFormValidity() {
+      const allValid = Array.from(inputs).every(input => input.classList.contains('valid'));
+      submitButton.disabled = !allValid;
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const tasksAssigned = parseInt(document.getElementById('tasksAssigned').value);
+      const tasksCompleted = parseInt(document.getElementById('tasksCompleted').value);
+      const goalsAligned = parseInt(document.getElementById('goalsAligned').value);
+      const rootCauseAnalyses = parseInt(document.getElementById('rootCauseAnalyses').value);
+      const accountabilityPractices = parseInt(document.getElementById('accountabilityPractices').value);
+
+      // Calculate rates
+      const completionRate = (tasksCompleted / tasksAssigned) * 100;
+      const alignmentRate = (goalsAligned / tasksAssigned) * 100;
+      const failedTasks = tasksAssigned - tasksCompleted;
+      const analysisRate = failedTasks === 0 ? 100 : (rootCauseAnalyses / failedTasks) * 100;
+      const accountabilityScore = (accountabilityPractices / 4) * 100;
+
+      // Calculate overall score
+      const overallScore = (completionRate * 0.25) + (alignmentRate * 0.25) + (analysisRate * 0.25) + (accountabilityScore * 0.25);
+
+      // Update display
+      document.getElementById('completionRate').textContent = Math.round(completionRate) + '%';
+      document.getElementById('alignmentRate').textContent = Math.round(alignmentRate) + '%';
+      document.getElementById('analysisRate').textContent = Math.round(analysisRate) + '%';
+      document.getElementById('accountabilityScore').textContent = Math.round(accountabilityScore) + '%';
+      document.getElementById('totalScore').textContent = Math.round(overallScore) + '%';
+
+      // Find constraint (lowest score)
+      const scores = [
+        { name: 'Completion Rate', value: completionRate, card: 'completionCard', action: 'Break down tasks into smaller chunks and remove blockers' },
+        { name: 'Goal Alignment', value: alignmentRate, card: 'alignmentCard', action: 'Stop non-essential tasks and focus on quarterly objectives' },
+        { name: 'Root Cause Analysis', value: analysisRate, card: 'analysisCard', action: 'Implement weekly failure review meetings' },
+        { name: 'Accountability Practices', value: accountabilityScore, card: 'accountabilityCard', action: 'Add tracking, reviews, consequences, and adjustment cycles' }
+      ];
+
+      const constraint = scores.reduce((min, current) => current.value < min.value ? current : min);
+      
+      // Highlight constraint
+      document.getElementById(constraint.card).classList.add('constraint');
+      document.getElementById('constraintText').textContent = `${constraint.name} is your weakest link at ${Math.round(constraint.value)}%`;
+
+      // Determine verdict
+      const hasLowComponent = scores.some(score => score.value < 50);
+      let verdict, verdictClass, verdictText, scoreClass, scoreText;
+
+      if (overallScore > 70 && !hasLowComponent) {
+        verdict = 'OPTIMIZE';
+        verdictClass = 'go';
+        verdictText = `Your system works but has room for improvement. Focus on your constraint: ${constraint.name.toLowerCase()}.`;
+        scoreClass = 'good';
+        scoreText = 'Strong performance foundation';
+      } else if (overallScore < 55 || scores.some(score => score.value < 30)) {
+        verdict = 'REDESIGN';
+        verdictClass = 'nogo';
+        verdictText = `Your system needs a complete overhaul. Start with ${constraint.name.toLowerCase()} immediately.`;
+        scoreClass = 'bad';
+        scoreText = 'Critical intervention needed';
+      } else {
+        verdict = 'IMPROVE';
+        verdictClass = 'go';
+        verdictText = `Your system needs focused improvements. Start with ${constraint.name.toLowerCase()} this week.`;
+        scoreClass = 'warning';
+        scoreText = 'Improvement opportunities identified';
+      }
+
+      // Update verdict
+      document.getElementById('verdict').className = `verdict ${verdictClass}`;
+      document.getElementById('verdict').querySelector('h2').textContent = verdict;
+      document.getElementById('verdictText').textContent = verdictText;
+
+      // Update score interpretation
+      document.getElementById('overallScore').className = `overall-score ${scoreClass}`;
+      document.getElementById('scoreInterpretation').textContent = scoreText;
+
+      // Store results for sharing
+      window.diagnosticResults = {
+        overallScore: Math.round(overallScore),
+        verdict,
+        constraint: constraint.name,
+        constraintValue: Math.round(constraint.value),
+        action: constraint.action
+      };
+
+      // Show results
+      document.getElementById('results').classList.add('show');
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function shareResults() {
+      const results = window.diagnosticResults;
+      const who = document.getElementById('commitWho').value || '[Name]';
+      const what = document.getElementById('commitWhat').value || '[Action]';
+      const when = document.getElementById('commitWhen').value || '[Date]';
+      
+      const summary = `Performance System Diagnosis:
+📊 Score: ${results.overallScore}%
+🎯 Verdict: ${results.verdict}
+⚠️ Constraint: ${results.constraint} (${results.constraintValue}%)
+
+My Commitment:
+👤 Who: ${who}
+🎯 What: ${what}
+📅 When: ${when}
+
+#PerformanceSystem #FastTrack`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'Performance System Diagnostic Results',
+          text: summary
+        });
+      } else {
+        navigator.clipboard.writeText(summary).then(() => {
+          alert('Results copied to clipboard! Ready to share.');
+        });
+      }
+    }
+  </script>
+</body>
+</html>
